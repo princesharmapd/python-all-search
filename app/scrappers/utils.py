@@ -2,7 +2,6 @@ import requests
 from datetime import datetime, date
 import cloudscraper
 
-
 scrapper = cloudscraper.create_scraper()
 
 headers = {
@@ -10,16 +9,14 @@ headers = {
     "Accept-Encoding": "*"
 }
 
-
-def getSource(url):
-    source = scrapper.get(url, headers=headers, timeout=5)
-    source.raise_for_status()
-    return source.text
-
+async def getSource(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers, timeout=5) as response:
+            response.raise_for_status()
+            return await response.text()
 
 def toInt(value):
     return int(value.replace(',', ''))
-
 
 def convertBytes(num):
     step_unit = 1000.0
@@ -28,15 +25,14 @@ def convertBytes(num):
             return "%3.1f %s" % (num, x)
         num /= step_unit
 
-
-def get(url):
-    return requests.get(url, headers=headers)
-
+async def get(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            return await response.text()
 
 def convertDateToTimestamp(value):
     dt = datetime.strptime(value, "%Y-%m-%d %H:%M")
     return int(dt.timestamp())
-
 
 def convertStrToDate(Str):
     monthNo = {
@@ -64,7 +60,6 @@ def convertStrToDate(Str):
         torrentDate = date.today().strftime("%Y-%m-%d %H:%M")
     finally:
         return torrentDate
-
 
 def getTPBTrackers():
     tr = "&tr=" + \

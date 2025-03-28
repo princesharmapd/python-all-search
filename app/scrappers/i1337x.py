@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 from .utils import toInt, convertStrToDate, convertDateToTimestamp, getSource
-from requests.exceptions import Timeout
+import aiohttp
 
-
-def search1337x(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw=False):
+async def search1337x(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw=False):
     baseUrl = f"https://1337xx.to"
     if filter_criteria is not None and filter_mode is not None:
         baseUrl = baseUrl + \
@@ -12,14 +11,13 @@ def search1337x(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw
         baseUrl = baseUrl + f"/search/{search_key}/{page}/"
     torrents = []
     try:
-        source = getSource(baseUrl)
+        source = await getSource(baseUrl)
     except Exception as e:
         raise Exception(e)
 
-    soup = BeautifulSoup(source, "lxml")
+    soup = BeautifulSoup(source, "html.parser")
 
     try:
-
         pageCounts = soup.select('div.pagination > ul > li')
         if pageCounts[-1].text.isnumeric():
             totalPages = pageCounts[-1].text
@@ -54,14 +52,13 @@ def search1337x(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw
         })
     return torrents, totalPages
 
-
-def get1337xTorrentData(link):
+async def get1337xTorrentData(link):
     data = {}
     try:
-        source = getSource(link)
+        source = await getSource(link)
     except Exception as e:
         raise Exception(e)
-    soup = BeautifulSoup(source, "lxml")
+    soup = BeautifulSoup(source, "html.parser")
     data["magnet"] = soup.select('ul.dropdown-menu > li')[-1].find('a')['href']
     data["torrent_file"] = soup.select(
         'ul.dropdown-menu > li')[0].find('a')['href']

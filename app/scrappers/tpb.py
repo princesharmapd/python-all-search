@@ -1,8 +1,8 @@
-import requests
 from .utils import get, toInt, convertBytes, getTPBTrackers
+import aiohttp
+import asyncio
 
 PAGE_COUNT = 20
-
 
 def sort_torrents(torrents, sort_criteria, sort_mode):
     if sort_criteria == "seeders":
@@ -28,18 +28,18 @@ def sort_torrents(torrents, sort_criteria, sort_mode):
     else:
         return torrents
 
-
-def searchTPB(search_key, sort_criteria=None, sort_mode=None, page=1, nsfw=False):
+async def searchTPB(search_key, sort_criteria=None, sort_mode=None, page=1, nsfw=False):
     torrents = []
-
     baseUrl = f"https://apibay.org/q.php?q={search_key}&cat=100,200,300,400,600"
 
     if nsfw:
         baseUrl = f"https://apibay.org/q.php?q={search_key}&cat=100,200,300,400,500,600"
 
-    resp_json = get(baseUrl).json()
+    async with aiohttp.ClientSession() as session:
+        async with session.get(baseUrl) as response:
+            resp_json = await response.json()
 
-    if(resp_json[0]["name"] == "No results returned"):
+    if resp_json[0]["name"] == "No results returned":
         return torrents, 1
 
     for t in resp_json:
@@ -62,22 +62,28 @@ def searchTPB(search_key, sort_criteria=None, sort_mode=None, page=1, nsfw=False
 
     return torrents[PAGE_COUNT * (page-1):PAGE_COUNT * page], totalPages
 
-
-def getTPBTorrentData(link):
+async def getTPBTorrentData(link):
     data = {}
-    id = dict(x.split('=')
-              for x in requests.utils.urlparse(link).query.split('&'))["id"]
-    resp_json = get(f"https://apibay.org/t.php?id={id}").json()
-    if(resp_json["name"] == "Torrent does not exsist."):
+    id = link.split('=')[-1]
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"https://apibay.org/t.php?id={id}") as response:
+            resp_json = await response.json()
+    
+    if resp_json["name"] == "Torrent does not exsist.":
         data["magnet"] = ""
         data["files"] = []
         return data
-    print(getTPBTrackers())
+    
     magnet = "magnet:?xt=urn:btih:" + \
         resp_json["info_hash"] + "&dn=" + \
-        requests.utils.quote(resp_json["name"]) + getTPBTrackers()
+        aiohttp.helpers.quote(resp_json["name"]) + getTPBTrackers()
     data["magnet"] = magnet
-    resp_json = get(f"http://apibay.org/f.php?id={id}").json()
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"http://apibay.org/f.php?id={id}") as response:
+            resp_json = await response.json()
+    
     files = []
     try:
         for file in resp_json:

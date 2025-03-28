@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from typing import Optional
 from fastapi.responses import JSONResponse
+import asyncio
 
 app = FastAPI()
 
@@ -16,7 +17,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.middleware("http")
 async def errors_handling(request: Request, call_next):
     try:
@@ -24,49 +24,40 @@ async def errors_handling(request: Request, call_next):
     except Exception as exc:
         return JSONResponse(status_code=500, content={'reason': str(exc)})
 
-
 @app.get("/")
 def read_root():
     return {"message": "ok"}
 
-
 @app.get("/search/1337x")
-def search1337xRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0), nsfw: Optional[bool] = Query(False)):
-    torrents, totalPages = search1337x(q, sort_type, sort_mode, page, nsfw)
+async def search1337xRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0), nsfw: Optional[bool] = Query(False)):
+    torrents, totalPages = await search1337x(q, sort_type, sort_mode, page, nsfw)
     return {"torrents": torrents, "totalPages": totalPages}
-
 
 @app.get("/search/nyaa")
-def searchNyaaRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0)):
-    torrents, totalPages = searchNyaa(q, sort_type, sort_mode, page)
+async def searchNyaaRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0)):
+    torrents, totalPages = await searchNyaa(q, sort_type, sort_mode, page)
     return {"torrents": torrents, "totalPages": totalPages}
-
 
 @app.get("/search/rarbg")
-def searchRarbgRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0), nsfw: Optional[bool] = Query(False)):
-    torrents, totalPages = searchRarbg(q, sort_type, sort_mode, page, nsfw)
+async def searchRarbgRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0), nsfw: Optional[bool] = Query(False)):
+    torrents, totalPages = await searchRarbg(q, sort_type, sort_mode, page, nsfw)
     return {"torrents": torrents, "totalPages": totalPages}
-
 
 @app.get("/search/tpb")
-def searchTPBRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0), nsfw: Optional[bool] = Query(False)):
-    torrents, totalPages = searchTPB(q, sort_type, sort_mode, page, nsfw)
+async def searchTPBRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), sort_mode: Optional[str] = Query(None, regex="^asc$|^desc$"), page: Optional[int] = Query(1, gt=0), nsfw: Optional[bool] = Query(False)):
+    torrents, totalPages = await searchTPB(q, sort_type, sort_mode, page, nsfw)
     return {"torrents": torrents, "totalPages": totalPages}
 
-
 @app.get("/get/1337x")
-def get1337xRoute(link: str):
-    return {"data": get1337xTorrentData(link)}
-
+async def get1337xRoute(link: str):
+    return {"data": await get1337xTorrentData(link)}
 
 @app.get("/get/rarbg")
-def getRarbgRoute(link: str):
-    return {"data": getRarbgTorrentData(link)}
-
+async def getRarbgRoute(link: str):
+    return {"data": await getRarbgTorrentData(link)}
 
 @app.get("/get/tpb")
-def getTPBRoute(link: str):
-    return {"data": getTPBTorrentData(link)}
-
+async def getTPBRoute(link: str):
+    return {"data": await getTPBTorrentData(link)}
 
 handler = Mangum(app)

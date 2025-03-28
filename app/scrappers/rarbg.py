@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 from .utils import toInt, convertDateToTimestamp, getSource
+import aiohttp
 
-
-def searchRarbg(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw=False):
+async def searchRarbg(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw=False):
     baseUrl = f"https://rargb.to/search/{page}/?search={search_key}&category[]=movies&category[]=tv&category[]=games&category[]=music&category[]=anime&category[]=apps&category[]=documentaries&category[]=other"
     if nsfw:
         baseUrl = f"https://rargb.to/search/{page}/?search={search_key}"
@@ -13,10 +13,10 @@ def searchRarbg(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw
     torrents = []
 
     try:
-        source = getSource(baseUrl)
+        source = await getSource(baseUrl)
     except Exception as e:
         raise Exception(e)
-    soup = BeautifulSoup(source, "lxml")
+    soup = BeautifulSoup(source, "html.parser")
 
     try:
         pageCounts = soup.find(
@@ -46,14 +46,13 @@ def searchRarbg(search_key, filter_criteria=None, filter_mode=None, page=1, nsfw
         })
     return torrents, totalPages
 
-
-def getRarbgTorrentData(link):
+async def getRarbgTorrentData(link):
     data = {}
     try:
-        source = getSource(link)
+        source = await getSource(link)
     except Exception as e:
         raise Exception(e)
-    soup = BeautifulSoup(source, "lxml")
+    soup = BeautifulSoup(source, "html.parser")
 
     trs = soup.select("table.lista > tbody > tr")
     data["magnet"] = trs[0].find('a')["href"]
