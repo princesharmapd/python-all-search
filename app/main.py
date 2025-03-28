@@ -10,6 +10,7 @@ from .scrappers.rarbg import searchRarbg, getRarbgTorrentData
 import os
 app = FastAPI()
 
+PORT = int(os.getenv("PORT", 8000))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
