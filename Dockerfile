@@ -1,9 +1,10 @@
-FROM python:3.9
+FROM python:3.9-slim  # Use a smaller base image
 
-WORKDIR /home
+WORKDIR /app
 
-COPY requirements.txt /home
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -r requirements.txt
+COPY . .
 
-COPY . /home
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

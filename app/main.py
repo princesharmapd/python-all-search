@@ -7,7 +7,7 @@ from .scrappers.tpb import getTPBTorrentData, searchTPB
 from .scrappers.i1337x import search1337x, get1337xTorrentData
 from .scrappers.nyaa import searchNyaa
 from .scrappers.rarbg import searchRarbg, getRarbgTorrentData
-
+import os
 app = FastAPI()
 
 app.add_middleware(
@@ -25,7 +25,7 @@ async def errors_handling(request: Request, call_next):
 
 @app.get("/")
 def read_root():
-    return {"message": "ok"}
+    return {"message": "Hello, Render!"}
 
 @app.get("/search/1337x")
 async def search1337xRoute(q: str, sort_type: Optional[str] = Query(None, regex="^time$|^size$|^seeders$|^leechers$"), 
