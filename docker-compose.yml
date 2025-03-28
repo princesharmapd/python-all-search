@@ -1,3 +1,5 @@
+version: "3.7"
+ 
 services:
   app:
     build:
@@ -8,7 +10,11 @@ services:
     networks:
       - nginx-network
     ports:
-      - "${PORT:-8000}:8000"  # Use environment variable for port
-    environment:
-      - PORT=8000  # Render sets this automatically
-    command: uvicorn app.main:app --proxy-headers --host 0.0.0.0 --port ${PORT:-8000} --workers 2 --http auto --access-log
+      - "8000:8000"
+    command: uvicorn app.main:app --proxy-headers --host 0.0.0.0 --port 8000 --workers 2 --http h11 --access-log
+
+
+networks:
+  nginx-network:
+    external: true
+      
